@@ -5,17 +5,14 @@ const TechSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  role:{
+    junior: {type: mongoose.Schema.Types.Mixed},
+    mid: {type: mongoose.Schema.Types.Mixed},
+    senior: {type: mongoose.Schema.Types.Mixed},
+  },
   description: {
     type: String,
     required: true
-  },
-  salary: {
-    type: Number,
-    required: true
-  },
-  updatedTimes: {
-    type: Number,
-    required: false
   },
   createdAt: {
     type: Date,

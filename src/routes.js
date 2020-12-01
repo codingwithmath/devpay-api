@@ -5,7 +5,7 @@ const techController = require('./controllers/tech');
 routes
 .post('/dev', devController.store)
 
-
+.get('/tech/:name', techController.read)
 .post('/tech', techController.store)
 .post('/tech/salary', techController.update)
 

@@ -2,21 +2,52 @@ const Tech = require('../models/Tech');
 const calculateAvarage = require('../utils/calculateAvarage');
 
 module.exports = {
-  async store(req, res) {
-    const { name, description, salary } = req.body;
+  async read(req, res) {
+    const { name} = req.params;
 
-    const techExistis = await Tech.findOne({ name });
+    const techName = String(name).toLowerCase();
+
+    const tech = await Tech.find({ name: techName});
+
+    if (!tech.length) {
+      console.log(`Tech ${ name } don't exists!`);
+      return res.send(`Tech ${ name } don't exists!`);
+    }
+
+    return res.send(tech)
+  },
+
+  async store(req, res) {
+    const { name, description } = req.body;
+
+    const techName = String(name).toLowerCase();
+
+    const techExistis = await Tech.findOne({ name: techName});
 
     if (techExistis) {
       console.log(`Tech ${ name } already exists!`);
       return res.send(`Tech ${ name } already exists!`);
     }
 
+    const role = {
+      junior: {
+        salary: 0,
+        updatedTimes: 0
+      },
+      mid: {
+        salary: 0,
+        updatedTimes: 0
+      },
+      senior: {
+        salary: 0,
+        updatedTimes: 0
+      }
+    }
+
     const tech = await Tech.create({
-      name,
+      name: techName,
+      role,
       description,
-      salary,
-      updatedTimes: 0
     });
 
     console.log(`Tech ${name} created!`);
@@ -24,35 +55,43 @@ module.exports = {
   },
 
   async update (req, res) {
-    const tech = req.body;
+    const {name, role, salary} = req.body;
 
-    const getTech = await Tech.findOne({ name: tech.name });
+    const techName = String(name).toLowerCase();
 
+    const getTech = await Tech.findOne({ name: techName });
+    
     if (!getTech) {
-      console.log(`Tech ${ name } don't exists!`);
-      return res.send(`Tech ${ name } don't exists!`);
+      console.log(`Tech ${ techName } don't exists!`);
+      return res.send(`Tech ${ techName } don't exists!`);
     }
 
-    let updatedTimes
+    const getRoleName = Object.keys(getTech.role).find(tech => tech === role)
 
-    if(!tech.updatedTimes) {
-      updatedTimes = 2
-    } else {
-      updatedTimes = tech.updatedTimes
+    console.log("role escolhida:", getRoleName)
+
+    if (!getRoleName) {
+      console.log("Invalid role!");
+      return res.send("Invalid role");
     }
 
-    console.log("updated times:", updatedTimes)
+    const roleInfo = Object.assign(getTech["role"][getRoleName], {})
 
-    const currentSalary = calculateAvarage(getTech.salary, tech.salary, updatedTimes)
+    roleInfo.updatedTimes = roleInfo.updatedTimes >= 1 ? 2 : 1;
 
-    const updatedTech = await Tech.findOneAndUpdate(getTech._id, {
-      salary: currentSalary,
-      updatedTimes: ++updatedTimes
+    roleInfo.salary = calculateAvarage(roleInfo.salary, salary, roleInfo.updatedTimes).toFixed(2);
+
+    getTech.role[getRoleName] = roleInfo
+
+    const updatedTech = await Tech.findOneAndUpdate({
+      _id: getTech
+    }, {
+      $set: {
+        role: getTech.role
+      }
     }, {
       new: true
-    }
-    )
-
+    })
     return res.json(updatedTech);
   }
 }
