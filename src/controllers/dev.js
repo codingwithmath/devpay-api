@@ -32,7 +32,7 @@ module.exports = {
       techs: techsArray
     })
 
-    console.log(`User ${github_username} created!`)
+    console.log(`User ${github_username} created!`);
     return res.json(dev);
   }
 }
